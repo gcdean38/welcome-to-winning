@@ -34,6 +34,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            position: relative; /* Add this */
         }
 
         .logo {
@@ -53,6 +54,10 @@
         .nav-tabs {
             display: flex;
             gap: 2rem;
+            position: absolute; /* Add this */
+            left: 50%;           /* Add this */
+            top: 50%;            /* Add this */
+            transform: translate(-50%, -50%); /* Add this */
         }
 
         .nav-tab {
