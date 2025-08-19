@@ -408,6 +408,14 @@
             height: auto;
         }
 
+        .resume-link {
+            display: none;
+            margin-top: 1rem;
+            font-weight: bold;
+            color: var(--carolina-blue);
+            text-decoration: underline;
+        }
+
         @media (max-width: 768px) {
             .header {
                 flex-direction: column;
@@ -456,6 +464,13 @@
                 max-width: 250px;
                 width: 90%;
                 margin-bottom: 1.5rem;
+            }
+
+            .pdf-viewer {
+                display: none;
+            }
+            .resume-link {
+                display: inline-block;
             }
         }
     </style>
@@ -540,8 +555,16 @@
                 <h2 style="text-align: center; color: var(--dark-carolina); margin-bottom: 2rem;">Experience & Qualifications</h2>
                 <p style="text-align: center; margin-bottom: 2rem;">View my comprehensive background in political analytics and campaign consulting:</p>
                 
-                <div style="text-align: center;">
-                    <iframe class="pdf-viewer" src="GeoffreyCDeanPoliticsResume2025 (1).pdf" type="application/pdf"></iframe>
+                <div class="resume-embed-container">
+                    <iframe class="pdf-viewer" src="https://github.com/gcdean38/welcome-to-winning/raw/main/resume.pdf" type="application/pdf"></iframe>
+                    <a 
+                        href="https://github.com/gcdean38/welcome-to-winning/raw/main/resume.pdf" 
+                        target="_blank" 
+                        rel="noopener" 
+                        class="resume-link"
+                    >
+                        📄 View or Download Resume (PDF)
+                    </a>
                 </div>
             </div>
         </div>
