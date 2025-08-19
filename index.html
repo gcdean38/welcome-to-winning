@@ -640,6 +640,37 @@
                 </div>
             </div>
         </div>
+
+        <!-- Admin Page (hidden by default) -->
+        <div id="adminPage" class="dashboard" style="display:none;">
+            <div class="dashboard-header">
+                <h2 style="color: var(--dark-carolina); margin-bottom: 1rem;">Company Admin Panel</h2>
+                <button class="logout-btn" onclick="logout()">Logout</button>
+            </div>
+            <div class="dashboard-section">
+                <h3 style="color: var(--dark-carolina);">Campaigns & Logins</h3>
+                <div id="adminCampaigns"></div>
+                <button class="submit-btn" onclick="showCreateLoginModal()">+ Create New Login</button>
+            </div>
+            <div class="dashboard-section">
+                <h3 style="color: var(--dark-carolina);">Documents by Campaign</h3>
+                <div id="adminDocuments"></div>
+            </div>
+            <!-- Modal for creating new login -->
+            <div id="createLoginModal" class="modal">
+                <div class="modal-content">
+                    <span class="close" onclick="closeCreateLoginModal()">&times;</span>
+                    <h3 style="color: var(--dark-carolina);">Create New Login</h3>
+                    <form id="createLoginForm">
+                        <input type="email" name="email" placeholder="Email" required>
+                        <input type="text" name="name" placeholder="Name" required>
+                        <input type="text" name="campaign" placeholder="Campaign" required>
+                        <input type="password" name="password" placeholder="Password" required>
+                        <button type="submit" class="submit-btn">Create</button>
+                    </form>
+                </div>
+            </div>
+        </div>
     </main>
 
     <!-- Login Modal -->
@@ -697,6 +728,25 @@
             'client2@example.com': { password: 'password456', name: 'Jane Smith', files: ['Fundraising Analysis.pdf'] }
         };
 
+        // Example admin credentials (replace with secure backend in production)
+        const adminCredentials = { email: "bluelibertyanalytics@gmail.com", password: "adminpassword" };
+
+        // Add a campaigns object for demo purposes
+        let campaigns = {
+            "Smith for Congress": {
+                logins: [
+                    { email: "client1@example.com", name: "John Doe" }
+                ],
+                documents: ["Campaign Strategy Report.pdf", "Voter Analysis.xlsx"]
+            },
+            "Dean for Senate": {
+                logins: [
+                    { email: "client2@example.com", name: "Jane Smith" }
+                ],
+                documents: ["Fundraising Analysis.pdf"]
+            }
+        };
+
         let currentUser = null;
 
         // Login form submission
@@ -714,18 +764,26 @@
         });
 
         function login() {
-            // Hide main navigation and show dashboard
-            document.getElementById('navTabs').style.display = 'none';
-            document.getElementById('loginBtn').style.display = 'none';
-            document.querySelector('.main-content').innerHTML = document.getElementById('dashboard').outerHTML;
-            document.querySelector('.dashboard').classList.add('active');
-            modal.style.display = 'none';
-            
-            // Load user-specific files
-            loadClientFiles();
-            
-            // Update header to show logged in state
-            document.querySelector('.logo').textContent = `Welcome, ${currentUser.name}`;
+            if (currentUser.email === adminCredentials.email) {
+                document.querySelector('.main-content').innerHTML = document.getElementById('adminPage').outerHTML;
+                document.getElementById('adminPage').style.display = 'block';
+                loadAdminData();
+                modal.style.display = 'none';
+                document.querySelector('.logo').textContent = `Welcome, Admin`;
+            } else {
+                // Hide main navigation and show dashboard
+                document.getElementById('navTabs').style.display = 'none';
+                document.getElementById('loginBtn').style.display = 'none';
+                document.querySelector('.main-content').innerHTML = document.getElementById('dashboard').outerHTML;
+                document.querySelector('.dashboard').classList.add('active');
+                modal.style.display = 'none';
+                
+                // Load user-specific files
+                loadClientFiles();
+                
+                // Update header to show logged in state
+                document.querySelector('.logo').textContent = `Welcome, ${currentUser.name}`;
+            }
         }
 
         function logout() {
@@ -750,6 +808,70 @@
         function downloadFile(filename) {
             alert(`Downloading: ${filename}\n\nNote: In a real implementation, this would download the actual file from your server.`);
         }
+
+        // Load campaigns and logins for admin
+        function loadAdminData() {
+            const adminCampaignsDiv = document.getElementById('adminCampaigns');
+            const adminDocumentsDiv = document.getElementById('adminDocuments');
+            if (!adminCampaignsDiv || !adminDocumentsDiv) return;
+
+            adminCampaignsDiv.innerHTML = Object.entries(campaigns).map(([campaign, data]) => `
+                <div style="margin-bottom:1.5rem;">
+                    <strong>${campaign}</strong>
+                    <ul>
+                        ${data.logins.map(login => `
+                            <li>
+                                ${login.name} (${login.email})
+                                <button class="delete-btn" onclick="removeLogin('${campaign}','${login.email}')">Remove</button>
+                            </li>
+                        `).join('')}
+                    </ul>
+                </div>
+            `).join('');
+
+            adminDocumentsDiv.innerHTML = Object.entries(campaigns).map(([campaign, data]) => `
+                <div style="margin-bottom:1.5rem;">
+                    <strong>${campaign}</strong>
+                    <ul>
+                        ${data.documents.map(doc => `<li>${doc}</li>`).join('')}
+                    </ul>
+                </div>
+            `).join('');
+        }
+
+        // Remove login
+        function removeLogin(campaign, email) {
+            campaigns[campaign].logins = campaigns[campaign].logins.filter(login => login.email !== email);
+            loadAdminData();
+        }
+
+        // Show/close modal for creating login
+        function showCreateLoginModal() {
+            document.getElementById('createLoginModal').style.display = 'block';
+        }
+        function closeCreateLoginModal() {
+            document.getElementById('createLoginModal').style.display = 'none';
+        }
+
+        // Handle create login form
+        document.addEventListener('DOMContentLoaded', function() {
+            const createLoginForm = document.getElementById('createLoginForm');
+            if (createLoginForm) {
+                createLoginForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    const email = this.email.value;
+                    const name = this.name.value;
+                    const campaign = this.campaign.value;
+                    const password = this.password.value;
+                    if (!campaigns[campaign]) campaigns[campaign] = { logins: [], documents: [] };
+                    campaigns[campaign].logins.push({ email, name });
+                    users[email] = { password, name, files: [] };
+                    loadAdminData();
+                    closeCreateLoginModal();
+                    this.reset();
+                });
+            }
+        });
 
         // File upload handling
         document.getElementById('fileInput').addEventListener('change', function(e) {
@@ -808,6 +930,12 @@
                 console.error(error);
             });
         });
+
+        // Admin functionalities (mockup)
+        function showAdminPage() {
+            document.getElementById('adminPage').style.display = 'block';
+            document.getElementById('dashboard').style.display = 'none';
+        }
     </script>
 </body>
 </html>
