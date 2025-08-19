@@ -722,16 +722,17 @@
             }
         }
 
-        // Mock user database (in a real implementation, this would be server-side)
+        // Mock user database (now with level field)
         const users = {
-            'client1@example.com': { password: 'password123', name: 'John Doe', files: ['Campaign Strategy Report.pdf', 'Voter Analysis.xlsx'] },
-            'client2@example.com': { password: 'password456', name: 'Jane Smith', files: ['Fundraising Analysis.pdf'] }
+            'client1@example.com': { password: 'password123', name: 'John Doe', files: ['Campaign Strategy Report.pdf', 'Voter Analysis.xlsx'], level: 'user', campaign: 'Smith for Congress' },
+            'client2@example.com': { password: 'password456', name: 'Jane Smith', files: ['Fundraising Analysis.pdf'], level: 'user', campaign: 'Dean for Senate' },
+            'bluelibertyanalytics@gmail.com': { password: 'adminpassword', name: 'Admin', files: [], level: 'admin' }
         };
 
-        // Example admin credentials (replace with secure backend in production)
+        // Example admin credentials (for reference)
         const adminCredentials = { email: "bluelibertyanalytics@gmail.com", password: "adminpassword" };
 
-        // Add a campaigns object for demo purposes
+        // Campaigns object for demo purposes
         let campaigns = {
             "Smith for Congress": {
                 logins: [
@@ -764,7 +765,7 @@
         });
 
         function login() {
-            if (currentUser.email === adminCredentials.email) {
+            if (currentUser.level === 'admin') {
                 document.querySelector('.main-content').innerHTML = document.getElementById('adminPage').outerHTML;
                 document.getElementById('adminPage').style.display = 'block';
                 loadAdminData();
@@ -785,6 +786,33 @@
                 document.querySelector('.logo').textContent = `Welcome, ${currentUser.name}`;
             }
         }
+
+        // When creating a new login, allow setting user/admin level
+        document.addEventListener('DOMContentLoaded', function() {
+            const createLoginForm = document.getElementById('createLoginForm');
+            if (createLoginForm) {
+                createLoginForm.innerHTML += `
+                    <select name="level" required style="margin-top:1rem;">
+                        <option value="user">User</option>
+                        <option value="admin">Admin</option>
+                    </select>
+                `;
+                createLoginForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    const email = this.email.value;
+                    const name = this.name.value;
+                    const campaign = this.campaign.value;
+                    const password = this.password.value;
+                    const level = this.level.value;
+                    if (!campaigns[campaign]) campaigns[campaign] = { logins: [], documents: [] };
+                    campaigns[campaign].logins.push({ email, name });
+                    users[email] = { password, name, files: [], level, campaign };
+                    loadAdminData();
+                    closeCreateLoginModal();
+                    this.reset();
+                });
+            }
+        });
 
         function logout() {
             currentUser = null;
@@ -852,26 +880,6 @@
         function closeCreateLoginModal() {
             document.getElementById('createLoginModal').style.display = 'none';
         }
-
-        // Handle create login form
-        document.addEventListener('DOMContentLoaded', function() {
-            const createLoginForm = document.getElementById('createLoginForm');
-            if (createLoginForm) {
-                createLoginForm.addEventListener('submit', function(e) {
-                    e.preventDefault();
-                    const email = this.email.value;
-                    const name = this.name.value;
-                    const campaign = this.campaign.value;
-                    const password = this.password.value;
-                    if (!campaigns[campaign]) campaigns[campaign] = { logins: [], documents: [] };
-                    campaigns[campaign].logins.push({ email, name });
-                    users[email] = { password, name, files: [] };
-                    loadAdminData();
-                    closeCreateLoginModal();
-                    this.reset();
-                });
-            }
-        });
 
         // File upload handling
         document.getElementById('fileInput').addEventListener('change', function(e) {
