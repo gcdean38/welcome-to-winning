@@ -9,7 +9,7 @@
         :root {
             --carolina-blue: #4B9CD3;
             --dark-carolina: #2E6B9E;
-            --black: #000000;
+            --black: rgb(47, 70, 100); /* updated */
             --silver: #C0C0C0;
             --light-silver: #F5F5F5;
             --white: #FFFFFF;
@@ -79,7 +79,7 @@
         }
 
         .login-btn {
-            background: var(--black);
+            background: var(--black); /* already uses the variable */
             color: var(--white);
             border: none;
             padding: 0.75rem 1.5rem;
@@ -91,7 +91,7 @@
 
         .login-btn:hover {
             background: var(--silver);
-            color: var(--black);
+            color: var(--black); /* already uses the variable */
             transform: translateY(-2px);
             box-shadow: 0 4px 10px rgba(0,0,0,0.2);
         }
@@ -135,7 +135,7 @@
 
         .hero p {
             font-size: 1.2rem;
-            color: var(--black);
+            color: var(--black); /* already uses the variable */
             max-width: 600px;
             margin: 0 auto;
         }
@@ -179,7 +179,7 @@
         }
 
         .submit-btn {
-            background: var(--black);
+            background: var(--black); /* already uses the variable */
             color: var(--white);
             border: none;
             padding: 0.75rem 2rem;
@@ -192,7 +192,7 @@
 
         .submit-btn:hover {
             background: var(--silver);
-            color: var(--black);
+            color: var(--black); /* already uses the variable */
             transform: translateY(-2px);
         }
 
@@ -253,7 +253,7 @@
         }
 
         .close:hover {
-            color: var(--black);
+            color: var(--black); /* already uses the variable */
         }
 
         .login-form {
@@ -312,7 +312,7 @@
         }
 
         .logout-btn {
-            background: var(--black);
+            background: var(--black); /* already uses the variable */
             color: var(--white);
             border: none;
             padding: 0.5rem 1rem;
@@ -323,7 +323,7 @@
 
         .logout-btn:hover {
             background: var(--silver);
-            color: var(--black);
+            color: var(--black); /* already uses the variable */
         }
 
         .dashboard-section {
@@ -405,7 +405,7 @@
             margin: 0 auto 2rem auto;
             max-width: 500px;
             width: 80%;
-            height: 500px;
+            height: auto;
         }
 
         @media (max-width: 768px) {
@@ -451,13 +451,19 @@
                 margin: 30% auto;
                 padding: 2rem;
             }
+
+            .cover-logo {
+                max-width: 250px;
+                width: 90%;
+                margin-bottom: 1.5rem;
+            }
         }
     </style>
 </head>
 <body>
     <header class="header">
         <div class="logo">
-            <img src="blue_liberty_logo_white.png" alt="Blue Liberty Analytics White Logo">
+            <img src="blue_liberty_logo_navy.png" alt="Blue Liberty Analytics Navy Logo">
             Blue Liberty Analytics
         </div>
         <nav class="nav-tabs" id="navTabs">
