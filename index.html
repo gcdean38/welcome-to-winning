@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Blue Liberty Analytics - Political Consulting</title>
-    <link rel="icon" type="image/png" href="blue_liberty_logo_white.png">
+    <link rel="icon" type="image/png" href="blue_liberty_profile_logo.png">
     <style>
         :root {
             --carolina-blue: #4B9CD3;
@@ -509,16 +509,16 @@
                 <h3>Ready to Get Started? Reach Out Today!</h3>
                 <form id="contactForm">
                     <div class="form-group">
-                        <input type="text" placeholder="Your Name" required>
+                        <input type="text" name="name" placeholder="Your Name" required>
                     </div>
                     <div class="form-group">
-                        <input type="email" placeholder="Your Email" required>
+                        <input type="email" name="email" placeholder="Your Email" required>
                     </div>
                     <div class="form-group">
-                        <input type="text" placeholder="Campaign/Organization" required>
+                        <input type="text" name="organization" placeholder="Campaign/Organization" required>
                     </div>
                     <div class="form-group">
-                        <textarea placeholder="Tell us about your campaign and analytics needs..." required></textarea>
+                        <textarea name="message" placeholder="Tell us about your campaign and analytics needs..." required></textarea>
                     </div>
                     <button type="submit" class="submit-btn">Send Inquiry</button>
                 </form>
@@ -786,8 +786,27 @@
         // Contact form submission
         document.getElementById('contactForm').addEventListener('submit', function(e) {
             e.preventDefault();
-            alert('Thank you for your inquiry! We will get back to you within 24 hours.');
-            this.reset();
+            
+            const formData = {
+                name: this.name.value,
+                email: this.email.value,
+                organization: this.organization.value,
+                message: this.message.value
+            };
+
+            fetch("https://script.google.com/macros/s/AKfycbxqAfTBA5mdYKBfbMNJry41uW5W6eovnhFDBF6DbZ1K7Rme5-BprEGNMgJEqsSs5T2c/exec", {
+                method: "POST",
+                body: JSON.stringify(formData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert("Thanks! Your submission was received.");
+                this.reset();
+            })
+            .catch(error => {
+                alert("There was an error submitting your form.");
+                console.error(error);
+            });
         });
     </script>
 </body>
