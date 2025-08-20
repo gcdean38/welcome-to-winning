@@ -20,8 +20,8 @@ export default function NavBar() {
         <Link href="/services" className={`nav-tab ${pathname === "/services" ? "active" : ""}`}>
           Services
         </Link>
-        <Link href="/experience" className={`nav-tab ${pathname === "/experience" ? "active" : ""}`}>
-          Experience
+        <Link href="/about" className={`nav-tab ${pathname === "/experience" ? "active" : ""}`}>
+          About Us
         </Link>
       </nav>
       <LoginModal /> {/* 👈 replaces old Login button */}
