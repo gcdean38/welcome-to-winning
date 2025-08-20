@@ -15,6 +15,8 @@ const geistMono = Geist_Mono({
 export const metadata = {
   title: "Blue Liberty Analytics - Political Consulting",
   description: "Advanced analytics consulting for political campaigns.",
+  icon: "/blue_liberty_favicon.png", // 👈 add this
+
 };
 
 export default function RootLayout({ children }) {
