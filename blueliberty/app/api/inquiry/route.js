@@ -1,53 +1,53 @@
-// app/api/inquiry/route.js
 import { NextResponse } from "next/server";
-import { DynamoDBClient, PutItemCommand } from "@aws-sdk/client-dynamodb";
+import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
+import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
+import { DynamoDBDocumentClient, PutCommand } from "@aws-sdk/lib-dynamodb";
+import { v4 as uuidv4 } from "uuid";
 
-// Single shared client (server-only)
-const dynamo = new DynamoDBClient({
-  region: process.env.AWS_REGION, // e.g. "us-east-1"
-  credentials: {
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-  },
-});
-
-// OPTIONAL: put your table name in an env var to avoid hard-coding
-const TABLE = process.env.DYNAMODB_TABLE_NAME || "Inquiries";
+const region = process.env.AWS_REGION;
+const s3 = new S3Client({ region });
+const dynamo = DynamoDBDocumentClient.from(new DynamoDBClient({ region }));
 
 export async function POST(req) {
   try {
-    const { name, email, organization = "", message } = await req.json();
+    const body = await req.json();
+    const { name, email, organization, message } = body;
 
     if (!name || !email || !message) {
-      return NextResponse.json(
-        { error: "Missing required fields." },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Missing fields" }, { status: 400 });
     }
 
-    const id = crypto.randomUUID();
-    const createdAt = new Date().toISOString();
+    const id = uuidv4();
 
+    // Save to DynamoDB
     await dynamo.send(
-      new PutItemCommand({
-        TableName: TABLE,
+      new PutCommand({
+        TableName: process.env.DYNAMO_TABLE,
         Item: {
-          id:         { S: id },
-          name:       { S: name },
-          email:      { S: email },
-          organization:{ S: organization },
-          message:    { S: message },
-          createdAt:  { S: createdAt },
+          id,
+          name,
+          email,
+          organization,
+          message,
+          createdAt: new Date().toISOString(),
         },
       })
     );
 
-    return NextResponse.json({ ok: true, id });
-  } catch (err) {
-    console.error("Inquiry save failed:", err);
-    return NextResponse.json(
-      { error: "Failed to save inquiry" },
-      { status: 500 }
+    // Save raw JSON to S3
+    const s3Key = `inquiries/${id}.json`;
+    await s3.send(
+      new PutObjectCommand({
+        Bucket: process.env.S3_BUCKET,
+        Key: s3Key,
+        Body: JSON.stringify(body, null, 2),
+        ContentType: "application/json",
+      })
     );
+
+    return NextResponse.json({ success: true });
+  } catch (err) {
+    console.error("❌ Error saving inquiry:", err);
+    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }
