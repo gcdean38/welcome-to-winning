@@ -16,7 +16,7 @@ export default function ServicesPage() {
         <div className="service-card">
           <h4>🎯 Lead Scoring & Donation Analytics</h4>
           <p style={{ color: "var(--dark-carolina)" }}>
-            Maximize your fundraising potential with advanced lead scoring algorithms that identify your most promising donor prospects. Our data-driven approach analyzes donor behavior patterns, demographic data, and engagement metrics to help you focus your efforts where they'll have the greatest impact.
+            Maximize your fundraising potential with advanced lead scoring algorithms that identify your most promising donor prospects. Our data-driven approach analyzes donor behavior patterns, demographic data, and engagement metrics to help you focus your efforts where they&apos;ll have the greatest impact.
           </p>
         </div>
 
