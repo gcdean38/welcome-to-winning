@@ -13,13 +13,11 @@ export default function InquiryForm() {
     e.preventDefault();
     setLoading(true);
 
-    const data = { name, email, organization, message };
-
     try {
       const res = await fetch("/api/inquiry", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
+        body: JSON.stringify({ name, email, organization, message }),
       });
 
       if (res.ok) {
