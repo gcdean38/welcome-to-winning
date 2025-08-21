@@ -1,13 +1,6 @@
-import InquiryForm from "../../components/InquiryForm";  // 👈 import your component
-
 export default function ServicesPage() {
   return (
     <main className="main-content">
-      <div className="contact-form">
-        {/* Replace raw <form> with the component */}
-        <InquiryForm />
-      </div>
-
       <div className="services-content">
         <h2 style={{ textAlign: "center", color: "var(--dark-carolina)", marginBottom: "2rem" }}>
           Our Services
