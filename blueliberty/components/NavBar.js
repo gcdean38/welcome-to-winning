@@ -11,7 +11,7 @@ export default function NavBar() {
     <header className="header">
       <div className="logo">
         <img src="/blue_liberty_logo_navy.png" alt="Blue Liberty Analytics Navy Logo" />
-        <span style={{ color: "var(--black)" }}>Blue Liberty Analytics</span>
+        <span style={{ color: "var(--dark-carolina)" }}>Blue Liberty Analytics</span>
       </div>
       <nav className="nav-tabs">
         <Link href="/" className={`nav-tab ${pathname === "/" ? "active" : ""}`}>
