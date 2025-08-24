@@ -1,6 +1,7 @@
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import NavBar from "../components/NavBar";
+import Providers from "../components/Providers";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -16,16 +17,18 @@ export const metadata = {
   title: "Blue Liberty Analytics - Political Consulting",
   description: "Advanced analytics consulting for political campaigns.",
   icons: {
-    icon: "/blue_liberty_favicon.png", // 👈 correct way
+    icon: "/blue_liberty_favicon.png",
   },
 };
 
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <body className={`${geistSans.variable} ${geistMono.variable}`}>
-        <NavBar />   {/* 👈 Use client component */}
-        {children}
+      <body>
+        <Providers>
+          <NavBar />
+          {children}
+        </Providers>
       </body>
     </html>
   );
