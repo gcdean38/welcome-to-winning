@@ -11,6 +11,7 @@ const client = new DynamoDBClient({
 });
 
 const handler = NextAuth({
+  secret: process.env.NEXTAUTH_SECRET, // ✅ required in production!
   providers: [
     CognitoProvider({
       clientId: process.env.COGNITO_CLIENT_ID,
@@ -19,21 +20,21 @@ const handler = NextAuth({
     }),
   ],
   callbacks: {
-    // 🚫 Disable DynamoDB check for now
+    // ✅ DynamoDB check disabled for now
     async signIn({ user }) {
+      // Skip DB validation, allow all users to log in
+      return true;
+
+      // --- Keep this if you want to re-enable later ---
+      /*
       const command = new GetItemCommand({
         TableName: "AllowedUsers",
-        Key: {
-          email: { S: user.email },
-        },
+        Key: { email: { S: user.email } },
       });
 
       try {
         const result = await client.send(command);
-        if (!result.Item) {
-          console.warn(`Unauthorized login attempt: ${user.email}`);
-          return false;
-        }
+        if (!result.Item) return false;
 
         user.role = result.Item.role?.S || "user";
         user.orgId = result.Item.orgId?.S || null;
@@ -42,14 +43,17 @@ const handler = NextAuth({
         console.error("DynamoDB error:", err);
         return false;
       }
+      */
     },
+
     async jwt({ token, user }) {
       if (user) {
-        token.role = user.role;
-        token.orgId = user.orgId;
+        token.role = user.role || "user";
+        token.orgId = user.orgId || null;
       }
       return token;
     },
+
     async session({ session, token }) {
       if (token) {
         session.user.role = token.role;
