@@ -2,10 +2,12 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useState } from "react";
 import LoginModal from "./LoginModal";
 
 export default function NavBar() {
   const pathname = usePathname();
+  const [isLoginOpen, setIsLoginOpen] = useState(false);
 
   return (
     <header className="header">
@@ -21,6 +23,7 @@ export default function NavBar() {
         </span>
       </Link>
 
+      {/* Navigation Tabs */}
       <nav className="nav-tabs">
         <Link href="/" className={`nav-tab ${pathname === "/" ? "active" : ""}`}>
           Home
@@ -31,9 +34,19 @@ export default function NavBar() {
         <Link href="/about" className={`nav-tab ${pathname === "/about" ? "active" : ""}`}>
           About Us
         </Link>
+        {/* Client Login styled the same */}
+        <button 
+          className="nav-tab" 
+          onClick={() => setIsLoginOpen(true)}
+        >
+          Client Login
+        </button>
       </nav>
 
-      <LoginModal />
+      {/* Modal in center */}
+      {isLoginOpen && (
+        <LoginModal onClose={() => setIsLoginOpen(false)} />
+      )}
     </header>
   );
 }
