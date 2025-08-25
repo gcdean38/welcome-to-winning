@@ -373,4 +373,26 @@ a {
   .main-content {
     padding: 2rem 1rem;
   }
+
+  /* --- Hero Logo --- */
+.cover-logo {
+  max-width: 400px;   /* limit large screens */
+  width: 100%;        /* scale down automatically */
+  height: auto;       /* keep aspect ratio */
+  margin: 0 auto 1.5rem auto;
+  display: block;
+}
+
+@media (max-width: 768px) {
+  .cover-logo {
+    max-width: 250px;  /* smaller cap on mobile */
+  }
+}
+
+@media (max-width: 480px) {
+  .cover-logo {
+    max-width: 180px;  /* extra small screens */
+  }
+}
+
 }

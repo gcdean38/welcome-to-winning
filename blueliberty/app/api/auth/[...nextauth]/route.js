@@ -10,7 +10,7 @@ const client = new DynamoDBClient({
   },
 });
 
-const handler = NextAuth({
+export const authOptions = {
   secret: process.env.NEXTAUTH_SECRET,
   session: {
     strategy: "jwt",
@@ -38,28 +38,28 @@ const handler = NextAuth({
 
       try {
         const result = await client.send(command);
-        console.log("DynamoDB result:", JSON.stringify(result, null, 2)); // 👈 log what we actually get
+        console.log("DynamoDB result:", JSON.stringify(result, null, 2));
 
         if (!result.Item) return false;
 
         user.role = result.Item.role?.S || "client";
-        user.firstName =
-          result.Item.firstName?.S || user.name?.split(" ")[0] || "";
-        user.orgId = result.Item.orgId?.S || null; // ✅ capture orgId
+        user.firstName = result.Item.firstName?.S || user.name?.split(" ")[0] || "";
+        user.orgId = result.Item.orgId?.S || null;
+        user.orgName = result.Item.orgName?.S || null;
 
         return true;
       } catch (err) {
         console.error("DynamoDB error:", err);
         return false;
       }
-      
     },
 
     async jwt({ token, user }) {
       if (user) {
         token.role = user.role || "client";
         token.firstName = user.firstName || "";
-        token.orgId = user.orgId || null; // ✅ persist orgId
+        token.orgId = user.orgId || null;
+        token.orgName = user.orgName || null;
       }
       return token;
     },
@@ -68,7 +68,8 @@ const handler = NextAuth({
       if (token) {
         session.user.role = token.role;
         session.user.firstName = token.firstName;
-        session.user.orgId = token.orgId || null; // ✅ attach orgId to session
+        session.user.orgId = token.orgId || null;
+        session.user.orgName = token.orgName || null;
       }
       return session;
     },
@@ -79,6 +80,8 @@ const handler = NextAuth({
       return baseUrl;
     },
   },
-});
+};
+
+const handler = NextAuth(authOptions);
 
 export { handler as GET, handler as POST };
