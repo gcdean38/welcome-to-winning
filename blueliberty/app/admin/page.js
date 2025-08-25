@@ -10,12 +10,11 @@ export default function AdminPage() {
 
   return (
     <div style={{ padding: "2rem", color: "var(--dark-carolina)" }}>
-      <h1>Admin Dashboard</h1>
-      <p>Welcome, {session.user?.firstName || session.user?.email}</p>
+      <h1>{session.user?.orgId || "N/A"}'s Dashboard</h1>
       <p>Role: {session.user?.role}</p>
       <p>Org: {session.user?.orgId || "N/A"}</p>
 
-      <button
+      {/* <button
         onClick={() => signOut({ callbackUrl: "/" })}
         style={{
           marginTop: "1rem",
@@ -28,7 +27,7 @@ export default function AdminPage() {
         }}
       >
         Sign out
-      </button>
+      </button> */}
     </div>
   );
 }
