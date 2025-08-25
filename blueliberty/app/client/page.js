@@ -147,13 +147,11 @@ export default function ClientPage() {
                   onClick={async () => {
                     try {
                       if (f.name.endsWith(".html")) {
-                        // ✅ Route through /viewer so we can inject print()
                         window.open(
                           `/viewer?file=${encodeURIComponent(f.downloadUrl)}`,
                           "_blank"
                         );
                       } else {
-                        // Normal download
                         const res = await fetch(f.downloadUrl, { method: "GET" });
                         if (!res.ok) throw new Error(`HTTP error! ${res.status}`);
 

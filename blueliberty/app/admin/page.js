@@ -3,6 +3,56 @@
 import { useSession } from "next-auth/react";
 import { useState, useEffect } from "react";
 
+/** 🔹 Reusable Drag-and-Drop Zone */
+function FileDropZone({ onFileSelect }) {
+  const [dragging, setDragging] = useState(false);
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    setDragging(true);
+  };
+
+  const handleDragLeave = (e) => {
+    e.preventDefault();
+    setDragging(false);
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    setDragging(false);
+
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      onFileSelect(e.dataTransfer.files[0]);
+      e.dataTransfer.clearData();
+    }
+  };
+
+  return (
+    <div
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
+      style={{
+        border: "2px dashed var(--dark-carolina)",
+        borderRadius: "8px",
+        padding: "2rem",
+        textAlign: "center",
+        background: dragging ? "#f0f8ff" : "transparent",
+        cursor: "pointer",
+        marginTop: "0.5rem",
+      }}
+    >
+      <p>{dragging ? "Release to upload" : "Drag & drop a file here"}</p>
+      <p>or</p>
+      <input
+        type="file"
+        onChange={(e) => onFileSelect(e.target.files[0])}
+      />
+    </div>
+  );
+}
+
+/** 🔹 Admin Dashboard */
 export default function AdminPage() {
   const { data: session, status } = useSession();
 
@@ -60,7 +110,7 @@ export default function AdminPage() {
         body: JSON.stringify({
           fileName: file.name,
           fileType: file.type,
-          targetOrgId: selectedOrg, // ✅ must use targetOrgId
+          targetOrgId: selectedOrg, // ✅ admin must specify target org
         }),
         headers: { "Content-Type": "application/json" },
       });
@@ -130,14 +180,16 @@ export default function AdminPage() {
             </option>
           ))}
         </select>
-        <br />
-        <input
-          type="file"
-          onChange={(e) => setFile(e.target.files[0])}
-          style={{ marginTop: "0.5rem" }}
-        />
-        <br />
-        <button onClick={handleUpload}>Upload</button>
+
+        <FileDropZone onFileSelect={(f) => setFile(f)} />
+
+        <button
+          onClick={handleUpload}
+          disabled={!file || !selectedOrg}
+          style={{ marginTop: "1rem" }}
+        >
+          Upload
+        </button>
       </div>
 
       {Object.entries(allFiles).map(([orgId, dirs]) => (
