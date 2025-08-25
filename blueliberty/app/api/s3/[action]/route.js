@@ -84,20 +84,42 @@ export async function POST(req, context) {
 
     const files = await Promise.all(
       (result.Contents || []).map(async (item) => {
+        const name = item.Key.replace(prefix, "");
+        if (!name || name.endsWith("/")) return null; // ⛔ skip blanks/folders
+
         const getCommand = new GetObjectCommand({
           Bucket: process.env.AWS_S3_BUCKET,
           Key: item.Key,
         });
-        const downloadUrl = await getSignedUrl(s3, getCommand, { expiresIn: 3600 });
+
+        // View URL (renders in browser if HTML, images, etc.)
+        const viewUrl = await getSignedUrl(s3, getCommand, {
+          expiresIn: 3600,
+        });
+
+        // ✅ Force .html and .pdf downloads as .pdf
+        let downloadFileName = name;
+        if (name.endsWith(".html") || name.endsWith(".pdf")) {
+          const baseName = name.replace(/\.[^/.]+$/, ""); // strip extension
+          downloadFileName = `${baseName}.pdf`;
+        }
+
+        // Download URL (forces download + custom filename)
+        const downloadUrl = await getSignedUrl(s3, getCommand, {
+          expiresIn: 3600,
+          responseContentDisposition: `attachment; filename="${downloadFileName}"`,
+        });
+
         return {
           key: item.Key,
-          name: item.Key.replace(prefix, ""),
-          url: downloadUrl,
+          name,
+          viewUrl,
+          downloadUrl,
         };
       })
     );
 
-    return Response.json(files);
+    return Response.json(files.filter(Boolean));
   }
 
   return Response.json({ error: "Invalid action" }, { status: 400 });
