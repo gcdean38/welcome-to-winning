@@ -10,7 +10,7 @@ export default function AdminPage() {
 
   return (
     <div style={{ padding: "2rem", color: "var(--dark-carolina)" }}>
-      <h1>{session.user?.orgId || "N/A"}'s Dashboard</h1>
+      <h1>{session.user?.orgId || "N/A"}&apos;s Dashboard</h1>
       <p>Role: {session.user?.role}</p>
       <p>Org: {session.user?.orgId || "N/A"}</p>
 
