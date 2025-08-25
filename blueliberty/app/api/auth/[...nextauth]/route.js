@@ -11,7 +11,7 @@ const client = new DynamoDBClient({
 });
 
 const handler = NextAuth({
-  secret: process.env.NEXTAUTH_SECRET, // ✅ required in production!
+  secret: process.env.NEXTAUTH_SECRET,
   providers: [
     CognitoProvider({
       clientId: process.env.COGNITO_CLIENT_ID,
@@ -20,36 +20,37 @@ const handler = NextAuth({
     }),
   ],
   callbacks: {
-    // ✅ DynamoDB check disabled for now
     async signIn({ user }) {
-      // Skip DB validation, allow all users to log in
-      return true;
-
-      // --- Keep this if you want to re-enable later ---
-      /*
-      const command = new GetItemCommand({
-        TableName: "AllowedUsers",
-        Key: { email: { S: user.email } },
-      });
-
       try {
-        const result = await client.send(command);
-        if (!result.Item) return false;
+        const command = new GetItemCommand({
+          TableName: "AllowedUsers",
+          Key: { email: { S: user.email } },
+        });
 
-        user.role = result.Item.role?.S || "user";
+        const result = await client.send(command);
+
+        if (!result.Item) {
+          console.warn(`Unauthorized login attempt: ${user.email}`);
+          return false;
+        }
+
+        // ✅ Attach attributes from DynamoDB
+        user.role = result.Item.role?.S || "client";
         user.orgId = result.Item.orgId?.S || null;
+        user.firstName = result.Item.firstName?.S || user.name?.split(" ")[0] || "User";
+
         return true;
       } catch (err) {
         console.error("DynamoDB error:", err);
         return false;
       }
-      */
     },
 
     async jwt({ token, user }) {
       if (user) {
-        token.role = user.role || "user";
+        token.role = user.role || "client";
         token.orgId = user.orgId || null;
+        token.firstName = user.firstName || null;
       }
       return token;
     },
@@ -58,8 +59,15 @@ const handler = NextAuth({
       if (token) {
         session.user.role = token.role;
         session.user.orgId = token.orgId;
+        session.user.firstName = token.firstName;
       }
       return session;
+    },
+
+    async redirect({ baseUrl, token }) {
+      if (token?.role === "admin") return `${baseUrl}/admin`;
+      if (token?.role === "client") return `${baseUrl}/client`;
+      return baseUrl;
     },
   },
 });
