@@ -11,22 +11,28 @@ const client = new DynamoDBClient({
 });
 
 const handler = NextAuth({
-  secret: process.env.NEXTAUTH_SECRET, // ✅ required in production!
+  secret: process.env.NEXTAUTH_SECRET,
+  session: {
+    strategy: "jwt",      // ✅ Use JWT sessions
+    maxAge: 60 * 60,      // ✅ 1 hour session
+  },
   providers: [
-    CognitoProvider({
-      clientId: process.env.COGNITO_CLIENT_ID,
-      clientSecret: process.env.COGNITO_CLIENT_SECRET,
-      issuer: process.env.COGNITO_ISSUER,
-    }),
+CognitoProvider({
+  clientId: process.env.COGNITO_CLIENT_ID,
+  clientSecret: process.env.COGNITO_CLIENT_SECRET,
+  issuer: process.env.COGNITO_ISSUER,
+  authorization: {
+    params: {
+      prompt: "login",     // ✅ forces credentials prompt every time
+      scope: "openid email profile", // ✅ make sure scope is correct
+    },
+  },
+}),
+    
   ],
   callbacks: {
-    // ✅ DynamoDB check disabled for now
     async signIn({ user }) {
-      // Skip DB validation, allow all users to log in
-      return true;
-
-      // --- Keep this if you want to re-enable later ---
-      /*
+      // ✅ Pull role + firstName from DynamoDB
       const command = new GetItemCommand({
         TableName: "AllowedUsers",
         Key: { email: { S: user.email } },
@@ -34,22 +40,21 @@ const handler = NextAuth({
 
       try {
         const result = await client.send(command);
-        if (!result.Item) return false;
+        if (!result.Item) return false; // 🚫 reject if not found
 
-        user.role = result.Item.role?.S || "user";
-        user.orgId = result.Item.orgId?.S || null;
+        user.role = result.Item.role?.S || "client";
+        user.firstName = result.Item.firstName?.S || user.name?.split(" ")[0] || "";
         return true;
       } catch (err) {
         console.error("DynamoDB error:", err);
         return false;
       }
-      */
     },
 
     async jwt({ token, user }) {
       if (user) {
-        token.role = user.role || "user";
-        token.orgId = user.orgId || null;
+        token.role = user.role || "client";
+        token.firstName = user.firstName || "";
       }
       return token;
     },
@@ -57,9 +62,16 @@ const handler = NextAuth({
     async session({ session, token }) {
       if (token) {
         session.user.role = token.role;
-        session.user.orgId = token.orgId;
+        session.user.firstName = token.firstName;
       }
       return session;
+    },
+
+    async redirect({ baseUrl, token }) {
+      // ✅ Role-based redirects after login
+      if (token?.role === "admin") return `${baseUrl}/admin`;
+      if (token?.role === "client") return `${baseUrl}/client`;
+      return baseUrl;
     },
   },
 });

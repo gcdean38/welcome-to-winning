@@ -1,8 +1,25 @@
-import Image from "next/image";
-import styles from "./page.module.css";
+"use client";
+
+import { useEffect } from "react";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
+
 import InquiryForm from "../components/InquiryForm"; // 👈 import form
 
 export default function HomePage() {
+  const { data: session, status } = useSession();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (status === "authenticated") {
+      if (session.user.role === "admin") {
+        router.push("/admin");
+      } else {
+        router.push("/client");
+      }
+    }
+  }, [status, session, router]);
+
   return (
     <main className="main-content">
       <div id="home" className="page active">
