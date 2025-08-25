@@ -24,6 +24,31 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
+      <head>
+        {/* Standard favicon */}
+        <link rel="icon" href="/favicon.ico" />
+
+        {/* Optional high-res versions */}
+        <link rel="icon" type="image/png" href="/blue_liberty_favicon.png" />
+
+        {/* Apple touch icon */}
+        <link rel="apple-touch-icon" href="/blue_liberty_favicon.png" />
+
+        {/* ✅ JSON-LD structured data for Google logo */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "Organization",
+              "name": "Blue Liberty Analytics",
+              "url": "https://bluelibertyanalytics.com",
+              "logo": "https://bluelibertyanalytics.com/blue_liberty_favicon.png",
+            }),
+          }}
+        />
+      </head>
+
       <body>
         <Providers>
           <NavBar />
