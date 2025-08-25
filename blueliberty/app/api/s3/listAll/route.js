@@ -43,21 +43,35 @@ export async function POST(req) {
         const res = await s3.send(listFiles);
 
         if (res.Contents) {
-          results[orgId][folder] = await Promise.all(
-            res.Contents.map(async (item) => {
-              const getCmd = new GetObjectCommand({
-                Bucket: process.env.AWS_S3_BUCKET,
-                Key: item.Key,
-              });
-              const url = await getSignedUrl(s3, getCmd, {
-                expiresIn: 3600,
-              });
-              return {
-                name: item.Key.replace(`clients/${orgId}/${folder}/`, ""),
-                url,
-                lastModified: item.LastModified,
-              };
-            })
+          const files = await Promise.all(
+            res.Contents
+              // skip the "folder" placeholder
+              .filter((item) => {
+                const name = item.Key.replace(
+                  `clients/${orgId}/${folder}/`,
+                  ""
+                );
+                return name.length > 0;
+              })
+              .map(async (item) => {
+                const getCmd = new GetObjectCommand({
+                  Bucket: process.env.AWS_S3_BUCKET,
+                  Key: item.Key,
+                });
+                const url = await getSignedUrl(s3, getCmd, {
+                  expiresIn: 3600,
+                });
+                return {
+                  name: item.Key.replace(`clients/${orgId}/${folder}/`, ""),
+                  url,
+                  lastModified: item.LastModified,
+                };
+              })
+          );
+
+          // 👇 sort newest → oldest
+          results[orgId][folder] = files.sort(
+            (a, b) => new Date(b.lastModified) - new Date(a.lastModified)
           );
         }
       }
