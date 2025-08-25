@@ -56,10 +56,17 @@ export default function NavBar() {
             >
               About Us
             </Link>
+            <Link
+              href="/contact"
+              className={`nav-tab ${pathname === "/contact" ? "active" : ""}`}
+            >
+              Contact
+            </Link>
           </nav>
           <button className="login-btn" onClick={() => signIn("cognito")}>
             Login
           </button>
+          
         </>
       ) : (
         // If signed in → show greeting + sign out
