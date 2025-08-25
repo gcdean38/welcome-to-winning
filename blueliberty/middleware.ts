@@ -5,21 +5,15 @@ import { NextResponse } from "next/server";
 export default withAuth(
   function middleware(req) {
     const token = req.nextauth?.token;
-
-    // If no token, redirect to login
-    if (!token) {
-      return NextResponse.redirect(new URL("/", req.url));
-    }
-
     const { pathname } = req.nextUrl;
 
     // Protect /admin
-    if (pathname.startsWith("/admin") && token.role !== "admin") {
+    if (pathname.startsWith("/admin") && token?.role !== "admin") {
       return NextResponse.redirect(new URL("/", req.url));
     }
 
     // Protect /client
-    if (pathname.startsWith("/client") && token.role !== "client") {
+    if (pathname.startsWith("/client") && token?.role !== "client") {
       return NextResponse.redirect(new URL("/", req.url));
     }
 
@@ -27,13 +21,13 @@ export default withAuth(
   },
   {
     callbacks: {
-      // Ensure the token is available in middleware
+      // Only allow requests that *have a token*
       authorized: ({ token }) => !!token,
     },
   }
 );
 
-// Apply only to these routes
+// Apply only to protected routes
 export const config = {
   matcher: ["/admin/:path*", "/client/:path*"],
 };
