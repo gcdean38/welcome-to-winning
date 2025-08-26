@@ -23,6 +23,7 @@ export async function POST(req, context) {
 
   const { fileName, fileType, targetOrgId } = body; // targetOrgId lets admin choose which client
   const orgId = session.user.orgId;
+  const orgName = session.user.orgName
   const role = session.user.role;
 
   if (!orgId) return Response.json({ error: "Missing orgId" }, { status: 400 });
@@ -115,6 +116,8 @@ export async function POST(req, context) {
           name,
           viewUrl,
           downloadUrl,
+        lastModified: item.LastModified, // ✅ include upload timestamp
+
         };
       })
     );

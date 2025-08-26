@@ -6,8 +6,10 @@ import {
 import { getServerSession } from "next-auth";
 import { authOptions } from "../../auth/[...nextauth]/route";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import { DynamoDBClient, ScanCommand } from "@aws-sdk/client-dynamodb";
 
 const s3 = new S3Client({ region: process.env.AWS_REGION });
+const ddb = new DynamoDBClient({ region: process.env.AWS_REGION });
 
 export async function POST(req) {
   const session = await getServerSession(authOptions);
@@ -16,14 +18,15 @@ export async function POST(req) {
   }
 
   try {
-    // List *all clients/* prefixes
+    // List all client folders in S3
     const listClients = new ListObjectsV2Command({
       Bucket: process.env.AWS_S3_BUCKET,
       Prefix: "clients/",
-      Delimiter: "/", // 👈 groups by "folder"
+      Delimiter: "/",
     });
 
     const clientFolders = await s3.send(listClients);
+
     const orgPrefixes =
       clientFolders.CommonPrefixes?.map((p) =>
         p.Prefix.replace("clients/", "").replace("/", "")
@@ -32,7 +35,26 @@ export async function POST(req) {
     const results = {};
 
     for (const orgId of orgPrefixes) {
-      results[orgId] = { inbound: [], outbound: [] };
+      // Fetch orgName from AllowedUsers table using Scan
+      let orgName = orgId; // fallback
+      try {
+        const allowedData = await ddb.send(
+          new ScanCommand({
+            TableName: process.env.DYNAMO_TABLE_ALLOWEDUSERS,
+            FilterExpression: "orgId = :orgId",
+            ExpressionAttributeValues: {
+              ":orgId": { S: orgId },
+            },
+            ProjectionExpression: "orgName",
+          })
+        );
+
+        orgName = allowedData.Items?.[0]?.orgName?.S || orgId;
+      } catch (err) {
+        console.warn(`Failed to get orgName for ${orgId} from AllowedUsers:`, err);
+      }
+
+      results[orgId] = { orgName, inbound: [], outbound: [] };
 
       for (const folder of ["inbound", "outbound"]) {
         const listFiles = new ListObjectsV2Command({
@@ -45,12 +67,8 @@ export async function POST(req) {
         if (res.Contents) {
           const files = await Promise.all(
             res.Contents
-              // skip the "folder" placeholder
               .filter((item) => {
-                const name = item.Key.replace(
-                  `clients/${orgId}/${folder}/`,
-                  ""
-                );
+                const name = item.Key.replace(`clients/${orgId}/${folder}/`, "");
                 return name.length > 0;
               })
               .map(async (item) => {
@@ -58,9 +76,7 @@ export async function POST(req) {
                   Bucket: process.env.AWS_S3_BUCKET,
                   Key: item.Key,
                 });
-                const url = await getSignedUrl(s3, getCmd, {
-                  expiresIn: 3600,
-                });
+                const url = await getSignedUrl(s3, getCmd, { expiresIn: 3600 });
                 return {
                   name: item.Key.replace(`clients/${orgId}/${folder}/`, ""),
                   url,
@@ -69,7 +85,6 @@ export async function POST(req) {
               })
           );
 
-          // 👇 sort newest → oldest
           results[orgId][folder] = files.sort(
             (a, b) => new Date(b.lastModified) - new Date(a.lastModified)
           );

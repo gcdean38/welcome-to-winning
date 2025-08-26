@@ -11,17 +11,14 @@ function FileDropZone({ onFileSelect }) {
     e.preventDefault();
     setDragging(true);
   };
-
   const handleDragLeave = (e) => {
     e.preventDefault();
     setDragging(false);
   };
-
   const handleDrop = (e) => {
     e.preventDefault();
     setDragging(false);
-
-    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+    if (e.dataTransfer.files?.length > 0) {
       onFileSelect(e.dataTransfer.files[0]);
       e.dataTransfer.clearData();
     }
@@ -34,28 +31,23 @@ function FileDropZone({ onFileSelect }) {
       onDrop={handleDrop}
       style={{
         border: "2px dashed var(--dark-carolina)",
-        borderRadius: "8px",
+        borderRadius: "12px",
         padding: "2rem",
         textAlign: "center",
-        background: dragging ? "#f0f8ff" : "transparent",
+        background: dragging ? "#f0f8ff" : "#fafafa",
         cursor: "pointer",
         marginTop: "0.5rem",
       }}
     >
       <p>{dragging ? "Release to upload" : "Drag & drop a file here"}</p>
       <p>or</p>
-      <input
-        type="file"
-        onChange={(e) => onFileSelect(e.target.files[0])}
-      />
+      <input type="file" onChange={(e) => onFileSelect(e.target.files[0])} />
     </div>
   );
 }
 
-/** 🔹 Admin Dashboard */
 export default function AdminPage() {
   const { data: session, status } = useSession();
-
   const [allFiles, setAllFiles] = useState({});
   const [newFiles, setNewFiles] = useState([]);
   const [file, setFile] = useState(null);
@@ -67,23 +59,19 @@ export default function AdminPage() {
     const fetchAll = async () => {
       try {
         const res = await fetch("/api/s3/listAll", { method: "POST" });
-        if (!res.ok) {
-          console.error("Failed to fetch all files", res.status);
-          return;
-        }
+        if (!res.ok) return;
         const data = await res.json();
         setAllFiles(data);
 
-        // detect new files in last 24h
         const now = new Date();
         const cutoff = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-
         const recent = [];
+
         Object.entries(data).forEach(([orgId, dirs]) => {
           ["inbound", "outbound"].forEach((dir) => {
-            dirs[dir].forEach((f) => {
+            dirs[dir]?.forEach((f) => {
               if (new Date(f.lastModified) > cutoff) {
-                recent.push({ orgId, dir, name: f.name });
+                recent.push({ orgId, orgName: dirs.orgName, dir, name: f.name });
               }
             });
           });
@@ -91,7 +79,7 @@ export default function AdminPage() {
 
         setNewFiles(recent);
       } catch (err) {
-        console.error("Error fetching all files:", err);
+        console.error(err);
       }
     };
 
@@ -110,29 +98,18 @@ export default function AdminPage() {
         body: JSON.stringify({
           fileName: file.name,
           fileType: file.type,
-          targetOrgId: selectedOrg, // ✅ admin must specify target org
+          targetOrgId: selectedOrg,
         }),
         headers: { "Content-Type": "application/json" },
       });
-
-      if (!res.ok) {
-        console.error("Failed to request upload", res.status);
-        return;
-      }
-
       const { url } = await res.json();
+      await fetch(url, { method: "PUT", body: file, headers: { "Content-Type": file.type } });
 
-      await fetch(url, {
-        method: "PUT",
-        body: file,
-        headers: { "Content-Type": file.type },
-      });
-
-      alert(`File uploaded to ${selectedOrg}/inbound/ ✅`);
+      alert(`File uploaded to ${selectedOrg}/inbound ✅`);
       setFile(null);
       setSelectedOrg("");
     } catch (err) {
-      console.error("Upload error:", err);
+      console.error(err);
       alert("Upload failed");
     }
   };
@@ -143,7 +120,7 @@ export default function AdminPage() {
   return (
     <div style={{ padding: "2rem", color: "var(--dark-carolina)" }}>
       <h1>Blue Liberty Admin Dashboard</h1>
-      <p>Role: {session.user?.role}</p>
+      <p>User: {session.user?.email}</p>
 
       {newFiles.length > 0 && (
         <div
@@ -152,77 +129,125 @@ export default function AdminPage() {
             border: "1px solid #ffe58f",
             padding: "1rem",
             marginBottom: "2rem",
-            borderRadius: "8px",
+            borderRadius: "12px",
           }}
         >
           <strong>🔔 {newFiles.length} new file(s)</strong>
           <ul>
             {newFiles.map((f, i) => (
               <li key={i}>
-                {f.orgId} → {f.dir}: <em>{f.name}</em>
+                {f.orgName || f.orgId} → {f.dir}: <em>{f.name}</em>
               </li>
             ))}
           </ul>
         </div>
       )}
 
-      {/* Upload section */}
       <div style={{ marginBottom: "2rem" }}>
         <h2>Upload File to Campaign</h2>
-        <select
-          value={selectedOrg}
-          onChange={(e) => setSelectedOrg(e.target.value)}
-        >
-          <option value="">Select campaign...</option>
-          {Object.keys(allFiles).map((orgId) => (
-            <option key={orgId} value={orgId}>
-              {orgId}
-            </option>
-          ))}
-        </select>
+<div className="styled-select">
+  <select value={selectedOrg} onChange={(e) => setSelectedOrg(e.target.value)}>
+    <option value="">Select campaign...</option>
+    {Object.entries(allFiles).map(([orgId, dirs]) => (
+      <option key={orgId} value={orgId}>
+        {dirs.orgName || orgId}
+      </option>
+    ))}
+  </select>
+</div>
+
+
+
 
         <FileDropZone onFileSelect={(f) => setFile(f)} />
 
         <button
           onClick={handleUpload}
           disabled={!file || !selectedOrg}
-          style={{ marginTop: "1rem" }}
+          style={{
+            marginTop: "1rem",
+            padding: "0.5rem 1rem",
+            borderRadius: "8px",
+            background: "var(--dark-carolina)",
+            color: "#fff",
+            border: "none",
+            cursor: file && selectedOrg ? "pointer" : "not-allowed",
+          }}
         >
           Upload
         </button>
       </div>
 
       {Object.entries(allFiles).map(([orgId, dirs]) => (
-        <details key={orgId} style={{ marginBottom: "1rem" }}>
-          <summary>{orgId}</summary>
-          <h3>Inbound (Admin → Client)</h3>
-          {dirs.inbound.length === 0 ? (
-            <p>No inbound files</p>
-          ) : (
-            <ul>
-              {dirs.inbound.map((f) => (
-                <li key={f.name}>
-                  <a href={f.url} download>
-                    {f.name}
-                  </a>
-                </li>
-              ))}
-            </ul>
-          )}
-          <h3>Outbound (Client → Admin)</h3>
-          {dirs.outbound.length === 0 ? (
-            <p>No outbound files</p>
-          ) : (
-            <ul>
-              {dirs.outbound.map((f) => (
-                <li key={f.name}>
-                  <a href={f.url} download>
-                    {f.name}
-                  </a>
-                </li>
-              ))}
-            </ul>
-          )}
+        <details key={orgId} style={{ marginBottom: "1rem", border: "1px solid #eee", borderRadius: "12px", padding: "0.5rem" }}>
+          <summary style={{ fontWeight: 600, cursor: "pointer", padding: "0.5rem 0" }}>
+            {dirs.orgName || orgId}
+          </summary>
+
+          {["inbound", "outbound"].map((dir) => (
+            <div key={dir} style={{ marginTop: "1rem" }}>
+              <h3>{dir === "inbound" ? "Sent" : "Inbox"}</h3>
+              {dirs[dir]?.length === 0 ? (
+                <p>No {dir} files</p>
+              ) : (
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))",
+                    gap: "1rem",
+                  }}
+                >
+                  {dirs[dir]
+                    .sort((a, b) => new Date(b.lastModified) - new Date(a.lastModified))
+                    .map((f) => {
+                      const dateStr = f.lastModified ? new Date(f.lastModified).toISOString().split("T")[0] : "";
+                      return (
+                        <div
+                          key={f.name}
+                          style={{
+                            background: "#fff",
+                            borderRadius: "12px",
+                            padding: "1rem",
+                            boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
+                            display: "flex",
+                            flexDirection: "column",
+                            cursor: "pointer",
+                            transition: "transform 0.1s ease-in-out",
+                          }}
+                          onClick={() => window.open(f.url, "_blank")}
+                          onMouseEnter={(e) => (e.currentTarget.style.transform = "scale(1.02)")}
+                          onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1)")}
+                        >
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                            <span style={{ fontWeight: 600, wordBreak: "break-word" }}>{f.name}</span>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                const link = document.createElement("a");
+                                link.href = f.url;
+                                link.download = f.name;
+                                document.body.appendChild(link);
+                                link.click();
+                                document.body.removeChild(link);
+                              }}
+                              title="Download file"
+                              style={{ background: "none", border: "none", fontSize: "1.2rem", cursor: "pointer" }}
+                            >
+                              ⬇️
+                            </button>
+                          </div>
+                          {dateStr && (
+                            <span style={{ fontSize: "0.85rem", fontStyle: "italic", color: "#444", marginTop: "0.4rem" }}>
+                              Date uploaded: {dateStr}
+                            </span>
+                          )}
+                        </div>
+                      );
+                    })}
+                </div>
+              )}
+            </div>
+          ))}
         </details>
       ))}
     </div>
