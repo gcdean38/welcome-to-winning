@@ -9,11 +9,16 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@aws-crypto/sha256-js": "^5.2.0",
     "@aws-sdk/client-dynamodb": "^3.873.0",
+    "@aws-sdk/client-lambda": "^3.876.0",
     "@aws-sdk/client-s3": "^3.872.0",
     "@aws-sdk/client-ses": "^3.872.0",
+    "@aws-sdk/credential-provider-node": "^3.876.0",
     "@aws-sdk/lib-dynamodb": "^3.873.0",
+    "@aws-sdk/protocol-http": "^3.370.0",
     "@aws-sdk/s3-request-presigner": "^3.873.0",
+    "@aws-sdk/signature-v4": "^3.370.0",
     "framer-motion": "^12.23.12",
     "html2pdf.js": "^0.11.1",
     "next": "15.5.0",
