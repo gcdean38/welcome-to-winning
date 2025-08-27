@@ -81,7 +81,10 @@ export default function NavBar() {
           <span style={{ color: "var(--white)", fontWeight: "600" }}>
             Hi, {session.user?.firstName || session.user?.email}!
           </span>
-          <button className="login-btn" onClick={() => signOut({ callbackUrl: "/" })}>
+          <button className="login-btn" onClick={() => signOut({ 
+            callbackUrl: "/",
+            redirect: true 
+          })}>
             Sign Out
           </button>
         </div>
