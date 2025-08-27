@@ -25,7 +25,12 @@ export const authOptions = {
         params: {
           prompt: "login",
           scope: "openid email profile",
+          response_type: "code",
         },
+      },
+      checks: ["pkce", "state"],
+      client: {
+        token_endpoint_auth_method: "client_secret_post",
       },
     }),
   ],
@@ -78,6 +83,12 @@ export const authOptions = {
       if (token?.role === "admin") return `${baseUrl}/admin`;
       if (token?.role === "client") return `${baseUrl}/client`;
       return baseUrl;
+    },
+  },
+  events: {
+    async signOut({ token, session }) {
+      // Additional cleanup on sign out
+      console.log("User signed out, clearing state");
     },
   },
 };
