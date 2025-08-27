@@ -1,37 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import InquiryForm from "../../components/InquiryForm";
 
 export default function ContactPage() {
-  const [status, setStatus] = useState(null);
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setStatus("loading");
-    const formData = {
-      name: e.target.name.value,
-      email: e.target.email.value,
-      organization: e.target.organization.value,
-      message: e.target.message.value,
-    };
-
-    try {
-      const res = await fetch("/api/inquiry", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
-      });
-      if (res.ok) {
-        setStatus("success");
-        e.target.reset();
-      } else {
-        setStatus("error");
-      }
-    } catch {
-      setStatus("error");
-    }
-  };
-
   return (
     <main
       style={{
@@ -46,7 +17,9 @@ export default function ContactPage() {
       <h1 style={{ color: "var(--dark-carolina)", marginBottom: "1.5rem" }}>
         Contact Blue Liberty Analytics
       </h1>
-      <p style={{ color: "var(--dark-carolina)", marginBottom: "1.5rem" }}>Schedule a meeting or reach out to our team to get start with Blue Liberty Analytics!</p>
+      <p style={{ color: "var(--dark-carolina)", marginBottom: "1.5rem" }}>
+        Schedule a meeting or reach out to our team to get started with Blue Liberty Analytics!
+      </p>
 
       {/* 📅 Schedule a Meeting Button */}
       <div style={{ marginBottom: "1.5rem", textAlign: "center" }}>
@@ -60,41 +33,8 @@ export default function ContactPage() {
         </a>
       </div>
 
-      {/* Contact Form */}
-      <form id="contactForm" onSubmit={handleSubmit}>
-        <div className="form-group">
-          <input type="text" name="name" placeholder="Your Name" required />
-        </div>
-        <div className="form-group">
-          <input type="email" name="email" placeholder="Your Email" required />
-        </div>
-        <div className="form-group">
-          <input
-            type="text"
-            name="organization"
-            placeholder="Campaign/Organization"
-            required
-          />
-        </div>
-        <div className="form-group">
-          <textarea
-            name="message"
-            placeholder="Tell us about your campaign and analytics needs..."
-            required
-          />
-        </div>
-        <button type="submit" className="submit-btn" style={{ marginTop: "1rem" }}>
-          Send Inquiry
-        </button>
-      </form>
-
-      {status === "loading" && <p>Sending...</p>}
-      {status === "success" && (
-        <p style={{ color: "green" }}>Thank you! Your inquiry was sent.</p>
-      )}
-      {status === "error" && (
-        <p style={{ color: "red" }}>There was an error. Please try again.</p>
-      )}
+      {/* 👇 Replaced inline form with InquiryForm component */}
+      <InquiryForm />
 
       {/* Inline CSS for hover effect */}
       <style jsx>{`
