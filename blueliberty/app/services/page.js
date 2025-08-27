@@ -6,13 +6,19 @@ export default function ServicesPage() {
           Our Services
         </h2>
         <p style={{ color: "var(--dark-carolina)" }}>
-          Our team is committed to working with you throughout the campaign, providing high-quality, data-driven consultation. We are also committed to discretion and security, using top of the line cloud technology to protect both your data, and the insights that will drive your campaign to success. If you are interested in seeing work samples, do not hestitate to reach out at bluelibertyanalytics@gmail.com, fill out our inquiry form, or schedule a consultation. 
-        </p>
+At Blue Liberty Analytics, we partner with you every step of your campaign, turning complex data into actionable strategy. Our team delivers high-quality, data-driven insights while maintaining the highest standards of security and discretion, protecting both your information and the intelligence that powers your decisions.
+
+
+      </p>
         <br></br>
         <p style={{ color: "var(--dark-carolina)" }}>
 
-        No matter the race, Blue Liberty Analytics is here to help you bring the confetti down on election night. From city council to US Senate races, we provide the analytical backbone for your campaign strategy. Our advanced analytics give you the inside edge needed to make informed decisions, allocate resources effectively, and build a path to victory.
+Whether you are running for city council or the U.S. Senate, we provide the analytical edge you need to win. Make informed decisions, allocate resources effectively, and build a clear path to victory.
 
+</p>
+        <br></br>
+        <p style={{ color: "var(--dark-carolina)" }}>
+Ready to see results? Reach out at bluelibertyanalytics@gmail.com, fill out our inquiry form, or schedule a consultation today to start building your winning strategy.  
 </p>
 
         <br></br>
