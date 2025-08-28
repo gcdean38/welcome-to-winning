@@ -18,7 +18,7 @@ Whether you are running for city council or the U.S. Senate, we provide the anal
 </p>
         <br></br>
         <p style={{ color: "var(--dark-carolina)" }}>
-Ready to see results? Reach out at bluelibertyanalytics@gmail.com, fill out our inquiry form, or schedule a consultation today to start building your winning strategy.  
+Ready to see results? Reach out at bluelibertyanalytics@gmail.com, fill out our inquiry form, or schedule a consultation today to view work samples or jump in and start building your winning strategy.  
 </p>
 
         <br></br>
