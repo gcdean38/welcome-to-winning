@@ -41,7 +41,7 @@ export default function AboutPage() {
             <em>Founder & Principal Data Scientist</em>
           </p>
           <p style={{ marginBottom: "1.5rem", lineHeight: "1.6" }}>
-            I specialize in data engineering, machine learning, and campaign analytics — 
+            I specialize in data engineering, machine learning, and campaign analytics 
             helping Democratic campaigns unlock the full potential of their data. With 
             experience spanning both the private sector and political campaigns, I bring 
             technical expertise and strategic insight to ensure your campaign has the 
