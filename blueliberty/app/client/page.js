@@ -49,37 +49,108 @@ function FileDropZone({ onFileSelect }) {
 export default function ClientPage() {
   const { data: session, status } = useSession();
   const [file, setFile] = useState(null);
+  const [inboundFiles, setInboundFiles] = useState([]);
   const [outboundFiles, setOutboundFiles] = useState([]);
   const [loadingFiles, setLoadingFiles] = useState(true);
 
-useEffect(() => {
+  // Fetch inbound & outbound files for the user's org
+  useEffect(() => {
   const fetchFiles = async () => {
+    setLoadingFiles(true);
     try {
-      const res = await fetch("/api/s3/list", { method: "POST" });
-      if (!res.ok) throw new Error("Failed to fetch");
-      const text = await res.text();
-      if (!text) return setOutboundFiles([]);
+      const res = await fetch("/api/s3/listOrgFiles", { method: "POST" });
+      let data;
+      try {
+        data = await res.json();
+      } catch {
+        data = null;
+      }
 
-      let data = JSON.parse(text);
-      if (!Array.isArray(data)) data = [];
+      if (!res.ok) {
+        console.error("API error:", data);
+        throw new Error(data?.error || `Failed with status ${res.status}`);
+      }
 
-      // ✅ sort by lastModified descending (most recent first)
-      data.sort((a, b) => new Date(b.lastModified || b.uploadedAt) - new Date(a.lastModified || a.uploadedAt));
-
-      setOutboundFiles(data);
+      setInboundFiles(data.inbound || []);
+      setOutboundFiles(data.outbound || []);
     } catch (err) {
-      console.error(err);
+      console.error("Fetch files failed:", err);
+      setInboundFiles([]);
       setOutboundFiles([]);
     } finally {
       setLoadingFiles(false);
     }
   };
+
   if (session?.user?.orgId) fetchFiles();
 }, [session?.user?.orgId]);
 
-
   if (status === "loading") return <p>Loading...</p>;
   if (!session) return <p>Not signed in</p>;
+
+  const renderFileCards = (files) =>
+    files.map((f) => {
+      const dateStr = f.lastModified
+        ? new Date(f.lastModified).toISOString().split("T")[0]
+        : "";
+
+      return (
+        <div
+          key={f.name}
+          style={{
+            background: "#fff",
+            borderRadius: "12px",
+            padding: "1rem",
+            boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
+            display: "flex",
+            flexDirection: "column",
+            minHeight: "100px",
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+            }}
+          >
+            <div
+              style={{
+                fontWeight: "600",
+                color: "var(--dark-carolina)",
+                wordBreak: "break-word",
+              }}
+            >
+              {f.name}
+            </div>
+            <button
+              onClick={() => downloadFile(f)}
+              title="Download file"
+              style={{
+                background: "none",
+                border: "none",
+                fontSize: "1.2rem",
+                cursor: "pointer",
+              }}
+            >
+              ⬇️
+            </button>
+          </div>
+          {dateStr && (
+            <div
+              style={{
+                fontSize: "0.85rem",
+                fontStyle: "italic",
+                color: "#444",
+                marginTop: "0.4rem",
+              }}
+            >
+              Date uploaded: {dateStr}
+            </div>
+          )}
+        </div>
+      );
+    });
 
   return (
     <div style={{ padding: "2rem", color: "var(--dark-carolina)" }}>
@@ -90,7 +161,7 @@ useEffect(() => {
         <h2>Upload Files</h2>
         <FileDropZone onFileSelect={(f) => setFile(f)} />
         <button
-          onClick={() => handleUpload(file)}
+          onClick={() => handleUpload(file, setOutboundFiles)}
           disabled={!file}
           style={{
             marginTop: "1rem",
@@ -106,9 +177,34 @@ useEffect(() => {
         </button>
       </section>
 
-      {/* Outbound files as CARDS */}
+      {/* Inbound files */}
       <section style={{ marginTop: "2rem" }}>
-        <h2>Files From Blue Liberty</h2>
+        <h2>
+    Files From Blue Liberty ({inboundFiles.length})
+  </h2>
+        {loadingFiles ? (
+          <p>Loading files...</p>
+        ) : inboundFiles.length === 0 ? (
+          <p>No files available.</p>
+        ) : (
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))",
+              gap: "1.5rem",
+              marginTop: "1rem",
+            }}
+          >
+            {renderFileCards(inboundFiles)}
+          </div>
+        )}
+      </section>
+
+      {/* Outbound files */}
+      <section style={{ marginTop: "2rem" }}>
+          <h2>
+    Files To Blue Liberty ({outboundFiles.length})
+  </h2>
         {loadingFiles ? (
           <p>Loading files...</p>
         ) : outboundFiles.length === 0 ? (
@@ -122,75 +218,7 @@ useEffect(() => {
               marginTop: "1rem",
             }}
           >
-{outboundFiles.map((f) => {
-  // format the date
-  let dateStr = "";
-  if (f.lastModified || f.uploadedAt) {
-    const d = new Date(f.lastModified || f.uploadedAt);
-    dateStr = d.toISOString().split("T")[0]; // YYYY-MM-DD
-  }
-  return (
-    <div
-      key={f.name}
-      style={{
-        background: "#fff",
-        borderRadius: "12px",
-        padding: "1rem",
-        boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
-        display: "flex",
-        flexDirection: "column",
-        minHeight: "100px",
-      }}
-    >
-      {/* File name + inline download button */}
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-        }}
-      >
-        <div
-          style={{
-            fontWeight: "600",
-            color: "var(--dark-carolina)",
-            wordBreak: "break-word",
-          }}
-        >
-          {f.name}
-        </div>
-        <button
-          onClick={() => downloadFile(f)}
-          title="Download file"
-          style={{
-            background: "none",
-            border: "none",
-            fontSize: "1.2rem",
-            cursor: "pointer",
-          }}
-        >
-          ⬇️
-        </button>
-      </div>
-
-      {/* Date uploaded */}
-      {dateStr && (
-        <div
-          style={{
-            fontSize: "0.85rem",
-            fontStyle: "italic",
-            color: "#444",
-            marginTop: "0.4rem",
-          }}
-        >
-          Date uploaded: {dateStr}
-        </div>
-      )}
-    </div>
-  );
-})}
-
-
+            {renderFileCards(outboundFiles)}
           </div>
         )}
       </section>
@@ -198,25 +226,46 @@ useEffect(() => {
   );
 }
 
-async function handleUpload(file) {
+// Upload function now optionally refreshes outbound files
+async function handleUpload(file, setOutboundFiles) {
   if (!file) return;
-  const res = await fetch("/api/s3/upload", {
-    method: "POST",
-    body: JSON.stringify({ fileName: file.name, fileType: file.type }),
-    headers: { "Content-Type": "application/json" },
-  });
-  const { url } = await res.json();
-  await fetch(url, {
-    method: "PUT",
-    body: file,
-    headers: { "Content-Type": file.type },
-  });
-  alert("File uploaded!");
+
+  try {
+    // Step 1: Get presigned URL from API
+    const res = await fetch("/api/s3/upload", {
+      method: "POST",
+      body: JSON.stringify({ fileName: file.name, fileType: file.type }),
+      headers: { "Content-Type": "application/json" },
+    });
+
+    if (!res.ok) throw new Error("Failed to get upload URL");
+    const { url } = await res.json();
+
+    // Step 2: Upload file to S3
+    await fetch(url, {
+      method: "PUT",
+      body: file,
+      headers: { "Content-Type": file.type },
+    });
+
+    alert("File uploaded!");
+
+    // Step 3: Refresh outbound files
+    const listRes = await fetch("/api/s3/listOrgFiles", { method: "POST" });
+    if (listRes.ok) {
+      const data = await listRes.json();
+      setOutboundFiles(data.outbound || []);
+    }
+  } catch (err) {
+    console.error("Upload failed:", err);
+    alert("Upload failed. Please try again.");
+  }
 }
 
+// Download file
 async function downloadFile(f) {
   try {
-    const res = await fetch(f.downloadUrl, { method: "GET" });
+    const res = await fetch(f.url, { method: "GET" });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const arrayBuffer = await res.arrayBuffer();
     const blob = new Blob([arrayBuffer], {
